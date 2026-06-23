@@ -64,7 +64,7 @@ Kita akan membagi sistem menjadi domain/modul mandiri (mengadopsi pendekatan Dom
 
 Ini adalah blueprint perjalanan kita:
 
-- Phase 1: Requirement Analysis & System Design (Sedang berlangsung)
+- Phase 1: Requirement Analysis & System Design
 
 - Phase 2: Database Design & Normalization (ERD, Relasi, Indeks)
 
