@@ -43,7 +43,7 @@ const registerAdmin = async (userData) => {
     const newUser = {
         ...userData,
         password: hashedPassword,
-        role: 'admin' // Force role menjadi admin
+        role: 'cashier' // Force role menjadi admin
     };
 
     const insertId = await userModel.create(newUser);
