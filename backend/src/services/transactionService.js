@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const socketUtil = require('../utils/socket');
 
 const checkout = async (userId, items, paymentMethod) => {
     // 1. Pinjam satu koneksi khusus dari pool
@@ -66,6 +67,14 @@ const checkout = async (userId, items, paymentMethod) => {
 
         // 6. Jika semua query di atas berhasil, simpan permanen ke database
         await connection.commit();
+
+        // --- TRIGGER REAL-TIME UPDATE ---
+        // Ambil instance socket dan pancarkan event ke SELURUH client yang terhubung
+        const io = socketUtil.getIO();
+        io.emit('stock_updated', {
+            message: 'Terjadi transaksi, perbarui data stok',
+            updatedItems: items // Mengirim array barang apa saja yang baru dibeli
+        });
         
         return transactionId;
 

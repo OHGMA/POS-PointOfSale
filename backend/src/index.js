@@ -33,9 +33,29 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// --- Server Initialization ---
+// Import module socket yang baru kita buat
+const socketUtil = require('./utils/socket');
+const http = require('http');
+
+// --- Server & Socket Initialization ---
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+// Bungkus app Express kita dengan HTTP module bawaan Node.js
+const server = http.createServer(app);
+
+// Inisialisasi Socket.io
+const io = socketUtil.init(server);
+
+// Dengarkan event koneksi dari client (Frontend)
+io.on('connection', (socket) => {
+    console.log(`🔌 Client terhubung dengan ID Socket: ${socket.id}`);
+
+    socket.on('disconnect', () => {
+        console.log(`❌ Client terputus: ${socket.id}`);
+    });
+});
+
+// GANTI app.listen menjadi server.listen
+server.listen(PORT, () => {
+    console.log(`🚀 Server berjalan pada http://localhost:${PORT}`);
 });
