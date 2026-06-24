@@ -17,9 +17,11 @@ app.use(express.json()); // Mem-parsing body request berupa JSON
 // --- Routes Registration ---
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes'); // Import rute produk
+const transactionRoutes = require('./routes/transactionRoutes'); // Import rute transaksi
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes); // Daftarkan rute produk
+app.use('/api/transactions', transactionRoutes); // Daftarkan rute transaksi
 
 // --- Basic Health Check Route ---
 // Route ini sering digunakan oleh AWS/Vercel/Docker untuk mengecek apakah server kita hidup
