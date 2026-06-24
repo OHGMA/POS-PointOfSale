@@ -10,7 +10,12 @@ const app = express();
 
 // --- Global Middlewares ---
 app.use(helmet()); // Mengamankan header HTTP
-app.use(cors()); // Mengizinkan akses dari frontend PWA kita nanti
+// Ubah bagian app.use(cors()) menjadi:
+app.use(cors({
+    origin: '*', // Untuk awal production, biarkan '*' (semua domain diizinkan). Nanti di dunia nyata, ganti dengan URL spesifik Vercel-mu.
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 app.use(morgan('dev')); // Logging HTTP request
 app.use(express.json()); // Mem-parsing body request berupa JSON
 
