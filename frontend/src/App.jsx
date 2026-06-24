@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useContext } from 'react';
 import { AuthContext } from './contexts/AuthContext';
 import Login from './pages/Login';
+import POS from './pages/POS'; // 1. Import komponen POS
 
 // Komponen Penjaga Pintu (High-Order Component)
 const ProtectedRoute = ({ children }) => {
@@ -25,24 +26,14 @@ function App() {
     return (
         <Router>
             <Routes>
-                {/* Rute Publik */}
                 <Route path="/login" element={<Login />} />
 
-                {/* Rute Terproteksi */}
                 <Route 
                     path="/" 
                     element={
                         <ProtectedRoute>
-                            {/* Nanti ini akan diganti dengan komponen halaman POS sungguhan */}
-                            <div style={{ padding: '2rem' }}>
-                                <h1>Selamat datang di Sistem POS</h1>
-                                <p>Halaman ini aman dan hanya bisa dilihat oleh kasir/admin yang sudah login.</p>
-                                <button 
-                                    onClick={() => {
-                                        localStorage.removeItem('pos_token');
-                                        window.location.reload();
-                                    }}>Logout</button>
-                            </div>
+                            {/* 2. Ganti div dummy dengan komponen POS kita */}
+                            <POS />
                         </ProtectedRoute>
                     } 
                 />

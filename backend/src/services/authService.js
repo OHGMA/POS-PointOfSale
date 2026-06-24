@@ -20,6 +20,7 @@ const login = async (email, password) => {
     // JANGAN PERNAH memasukkan password ke dalam payload!
     const payload = {
         id: user.id,
+        name: user.name,
         role: user.role
     };
 
@@ -43,7 +44,7 @@ const registerAdmin = async (userData) => {
     const newUser = {
         ...userData,
         password: hashedPassword,
-        role: 'cashier' // Force role menjadi admin
+        role: 'admin' // Force role menjadi admin
     };
 
     const insertId = await userModel.create(newUser);
