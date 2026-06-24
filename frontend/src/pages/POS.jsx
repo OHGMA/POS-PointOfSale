@@ -8,7 +8,18 @@ export default function POS() {
     
     // State Management
     const [products, setProducts] = useState([]);
-    const [cart, setCart] = useState([]);
+    // 1. Ubah inisialisasi state cart
+    // Alih-alih mulai dari [], kita minta React mengecek localStorage dulu
+    const [cart, setCart] = useState(() => {
+        const savedCart = localStorage.getItem('pos_cart');
+        return savedCart ? JSON.parse(savedCart) : [];
+    });
+
+    // 2. Tambahkan useEffect baru khusus untuk memantau 'cart'
+    // Setiap kali isi cart berubah (ditambah/dikurangi), otomatis simpan ke localStorage
+    useEffect(() => {
+        localStorage.setItem('pos_cart', JSON.stringify(cart));
+    }, [cart]);
     const [paymentMethod, setPaymentMethod] = useState('CASH');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -78,30 +89,70 @@ export default function POS() {
     const cartTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
 
     // 3. Logika Checkout (Mengirim ke Backend)
+    // Logika Checkout yang sudah di-upgrade
     const handleCheckout = async () => {
         if (cart.length === 0) return alert('Keranjang kosong!');
         
         setIsLoading(true);
-        try {
-            // Format data sesuai yang diminta controller backend kita
-            const payload = {
-                items: cart.map(item => ({ productId: item.productId, quantity: item.quantity })),
-                paymentMethod: paymentMethod
-            };
+        const payload = {
+            items: cart.map(item => ({ productId: item.productId, quantity: item.quantity })),
+            paymentMethod: paymentMethod
+        };
 
+        try {
             await api.post('/transactions/checkout', payload);
             
             alert('Transaksi Berhasil!');
-            setCart([]); // Kosongkan keranjang setelah sukses
-            // (Tidak perlu panggil fetchProducts manual di sini, karena Socket.io 
-            // akan otomatis menyuruh browser me-refresh data via event stock_updated)
-            
+            setCart([]); // Kosongkan keranjang
         } catch (error) {
-            alert(error.response?.data?.message || 'Gagal melakukan transaksi');
+            // PENTING: Jika error tidak memiliki response, berarti aplikasi gagal menghubungi server (Offline)
+            if (!error.response) {
+                alert('🌐 Anda sedang offline! Transaksi diamankan ke antrean lokal dan akan dikirim saat internet kembali.');
+                
+                // Ambil antrean lama, tambah transaksi baru, simpan lagi
+                const offlineQueue = JSON.parse(localStorage.getItem('pos_offline_queue') || '[]');
+                offlineQueue.push({ ...payload, timestamp: new Date().getTime() });
+                localStorage.setItem('pos_offline_queue', JSON.stringify(offlineQueue));
+                
+                setCart([]); // Tetap kosongkan keranjang agar kasir bisa lanjut melayani pelanggan berikutnya
+            } else {
+                // Ini error dari backend (misal: stok habis)
+                alert(error.response?.data?.message || 'Gagal melakukan transaksi');
+            }
         } finally {
             setIsLoading(false);
         }
     };
+
+    // Tambahkan useEffect ini untuk mendeteksi internet menyala (Background Sync)
+    useEffect(() => {
+        const handleOnline = async () => {
+            console.log('🌐 Koneksi internet pulih. Memeriksa antrean transaksi...');
+            const offlineQueue = JSON.parse(localStorage.getItem('pos_offline_queue') || '[]');
+            
+            if (offlineQueue.length > 0) {
+                // Kirim semua transaksi yang tertunda satu per satu
+                for (const payload of offlineQueue) {
+                    try {
+                        await api.post('/transactions/checkout', payload);
+                    } catch (err) {
+                        console.error('Gagal sinkronisasi transaksi lama:', err);
+                    }
+                }
+                
+                // Bersihkan antrean lokal setelah sukses dikirim
+                localStorage.removeItem('pos_offline_queue');
+                alert('✅ Data transaksi offline berhasil disinkronkan ke server!');
+                fetchProducts(); // Refresh stok ke versi terbaru server
+            }
+        };
+
+        // Pasang "telinga" ke browser untuk mendeteksi event 'online'
+        window.addEventListener('online', handleOnline);
+        
+        // Cleanup listener saat komponen ditutup
+        return () => window.removeEventListener('online', handleOnline);
+    }, []);
 
     return (
         <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f3f4f6' }}>
