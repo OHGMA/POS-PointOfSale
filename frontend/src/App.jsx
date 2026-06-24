@@ -1,122 +1,54 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { AuthContext } from './contexts/AuthContext';
+import Login from './pages/Login';
+
+// Komponen Penjaga Pintu (High-Order Component)
+const ProtectedRoute = ({ children }) => {
+    const { user, loading } = useContext(AuthContext);
+
+    // Tunggu sampai pengecekan token di local storage selesai
+    if (loading) {
+        return <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20vh' }}>Loading sistem...</div>;
+    }
+
+    // Jika tidak ada data user login, tendang ke /login
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    // Jika aman, render halaman yang diminta
+    return children;
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+    return (
+        <Router>
+            <Routes>
+                {/* Rute Publik */}
+                <Route path="/login" element={<Login />} />
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+                {/* Rute Terproteksi */}
+                <Route 
+                    path="/" 
+                    element={
+                        <ProtectedRoute>
+                            {/* Nanti ini akan diganti dengan komponen halaman POS sungguhan */}
+                            <div style={{ padding: '2rem' }}>
+                                <h1>Selamat datang di Sistem POS</h1>
+                                <p>Halaman ini aman dan hanya bisa dilihat oleh kasir/admin yang sudah login.</p>
+                                <button 
+                                    onClick={() => {
+                                        localStorage.removeItem('pos_token');
+                                        window.location.reload();
+                                    }}>Logout</button>
+                            </div>
+                        </ProtectedRoute>
+                    } 
+                />
+            </Routes>
+        </Router>
+    );
 }
 
-export default App
+export default App;
