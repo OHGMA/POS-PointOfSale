@@ -1,9 +1,10 @@
 import axios from 'axios';
 
 // Buat instance axios dengan konfigurasi dasar
+// Ubah baseURL menjadi dinamis
 const api = axios.create({
-    // Sesuaikan dengan URL backend-mu
-    baseURL: 'http://localhost:5000/api', 
+    // Mengambil dari .env saat lokal, atau dari dashboard Vercel saat production
+    baseURL: import.meta.env.VITE_API_URL,
     headers: {
         'Content-Type': 'application/json'
     }
